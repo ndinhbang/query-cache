@@ -1,0 +1,56 @@
+{
+    "name": "ndinhbang/query-cache",
+    "description": "A laravel package to cache database query result",
+    "keywords": [
+        "laravel",
+        "cache",
+        "query-cache",
+        "eloquent-cache"
+    ],
+    "homepage": "https://github.com/ndinhbang/query-cache",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Nguyen Dinh Bang",
+            "email": "ndinhbang111@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "illuminate/support": "^10.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ndinhbang\\QueryCache\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ndinhbang\\QueryCache\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ndinhbang\\QueryCache\\QueryCacheServiceProvider"
+            ],
+            "aliases": {
+                "QueryCache": "Ndinhbang\\QueryCache\\QueryCacheFacade"
+            }
+        }
+    }
+}

@@ -1,20 +1,20 @@
 <?php
 
-namespace Ndinhbang\QueryCache\Console\Commands\QueryCache;
+namespace Ndinhbang\QueryCache\Console\Commands;
 
-use function array_map;
-use function explode;
 use Illuminate\Console\Command;
 use Ndinhbang\QueryCache\QueryCache;
+use function array_map;
+use function explode;
 
-class Forget extends Command
+class ForgetCommand extends Command
 {
     /**
      * Indicates whether the command should be shown in the Artisan command list.
      *
      * @var bool
      */
-    protected $hidden = true;
+    protected $hidden = false;
 
     /**
      * The name and signature of the console command.

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\ServiceProvider;
-use Ndinhbang\QueryCache\Console\Commands\QueryCache\Forget;
+use Ndinhbang\QueryCache\Console\Commands\ForgetCommand;
 
 class QueryCacheServiceProvider extends ServiceProvider
 {
@@ -39,7 +39,7 @@ class QueryCacheServiceProvider extends ServiceProvider
 
             // Registering package commands.
              $this->commands([
-                 Forget::class
+                 ForgetCommand::class
              ]);
         }
     }

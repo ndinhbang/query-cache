@@ -47,7 +47,7 @@ class ForgetCommand extends Command
 
         $count = count($keys);
 
-        if ($QueryCache->store($store)->forget(...$keys)) {
+        if ($QueryCache->store($store)->forget($keys)) {
             if ($count > 1) {
                 $this->info("Successfully removed [$count] keys from the [$store] cache store.");
             } else {

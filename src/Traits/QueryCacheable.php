@@ -37,7 +37,7 @@ trait QueryCacheable
     {
         return [
             $this->getTable(),
-            $this->getTable() . ':' . $this->getRouteKeyName()
+            $this->getTable() . '_' . $this->getRouteKey()
         ];
     }
 

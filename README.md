@@ -2,7 +2,6 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/ndinhbang/query-cache.svg?style=flat-square)](https://packagist.org/packages/ndinhbang/query-cache)
 [![Total Downloads](https://img.shields.io/packagist/dt/ndinhbang/query-cache.svg?style=flat-square)](https://packagist.org/packages/ndinhbang/query-cache)
-![GitHub Actions](https://github.com/ndinhbang/query-cache/actions/workflows/main.yml/badge.svg)
 
 This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
 
@@ -18,12 +17,6 @@ composer require ndinhbang/query-cache
 
 ```php
 // Usage description here
-```
-
-### Testing
-
-```bash
-composer test
 ```
 
 ### Changelog
@@ -47,6 +40,3 @@ If you discover any security related issues, please email ndinhbang111@gmail.com
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
-## Laravel Package Boilerplate
-
-This package was generated using the [Laravel Package Boilerplate](https://laravelpackageboilerplate.com).

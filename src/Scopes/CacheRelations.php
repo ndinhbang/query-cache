@@ -4,8 +4,7 @@ namespace Ndinhbang\QueryCache\Scopes;
 
 use DateInterval;
 use DateTimeInterface;
-use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilderContract;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 
@@ -31,11 +30,11 @@ class CacheRelations implements Scope
     /**
      * Apply the scope to a given Eloquent query builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @param  BuilderContract  $builder
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return void
      */
-    public function apply(Builder $builder, Model $model): void
+    public function apply(BuilderContract $builder, Model $model): void
     {
         // Since scopes are applied last, we can safely wrap the eager loaded relations
         // with a cache, but using a custom cache key for each of these, allowing the
@@ -43,7 +42,7 @@ class CacheRelations implements Scope
         $eager = $builder->getEagerLoads();
 
         foreach ($eager as $key => $callback) {
-            $eager[$key] = function (EloquentBuilderContract $eloquent) use ($callback, $builder): void {
+            $eager[$key] = function (BuilderContract $eloquent) use ($callback, $builder): void {
                 $callback($eloquent);
 
                 // Always override the previous eloquent builder with the base cache parameters.

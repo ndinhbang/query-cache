@@ -2,40 +2,10 @@
 
 namespace Ndinhbang\QueryCache\Validation;
 
-use Closure;
-use Illuminate\Database\ConnectionResolverInterface;
-use Illuminate\Validation\DatabasePresenceVerifierInterface;
+use Illuminate\Validation\DatabasePresenceVerifier as LaravelDatabasePresenceVerifier;
 
-/**
- * @see \Illuminate\Validation\DatabasePresenceVerifier
- */
-class DatabasePresenceVerifier implements DatabasePresenceVerifierInterface
+class DatabasePresenceVerifier extends LaravelDatabasePresenceVerifier
 {
-    /**
-     * The database connection instance.
-     *
-     * @var \Illuminate\Database\ConnectionResolverInterface
-     */
-    protected $db;
-
-    /**
-     * The database connection to use.
-     *
-     * @var string
-     */
-    protected $connection;
-
-    /**
-     * Create a new database presence verifier.
-     *
-     * @param  \Illuminate\Database\ConnectionResolverInterface  $db
-     * @return void
-     */
-    public function __construct(ConnectionResolverInterface $db)
-    {
-        $this->db = $db;
-    }
-
     /**
      * Count the number of objects in a collection having the given value.
      *
@@ -54,8 +24,8 @@ class DatabasePresenceVerifier implements DatabasePresenceVerifierInterface
         if (! is_null($excludeId) && $excludeId !== 'NULL') {
             $query->where($idColumn ?: 'id', '<>', $excludeId);
         }
-        // todo: add query cache
-        return $this->addConditions($query, $extra)->count();
+
+        return $this->addConditions($query, $extra)->cache(ttl: 300, wait: 5)->count();
     }
 
     /**
@@ -70,72 +40,7 @@ class DatabasePresenceVerifier implements DatabasePresenceVerifierInterface
     public function getMultiCount($collection, $column, array $values, array $extra = [])
     {
         $query = $this->table($collection)->whereIn($column, $values);
-        // todo: add query cache
-        return $this->addConditions($query, $extra)->distinct()->count($column);
-    }
 
-    /**
-     * Add the given conditions to the query.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  array  $conditions
-     * @return \Illuminate\Database\Query\Builder
-     */
-    protected function addConditions($query, $conditions)
-    {
-        foreach ($conditions as $key => $value) {
-            if ($value instanceof Closure) {
-                $query->where(function ($query) use ($value) {
-                    $value($query);
-                });
-            } else {
-                $this->addWhere($query, $key, $value);
-            }
-        }
-
-        return $query;
-    }
-
-    /**
-     * Add a "where" clause to the given query.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  string  $key
-     * @param  string  $extraValue
-     * @return void
-     */
-    protected function addWhere($query, $key, $extraValue)
-    {
-        if ($extraValue === 'NULL') {
-            $query->whereNull($key);
-        } elseif ($extraValue === 'NOT_NULL') {
-            $query->whereNotNull($key);
-        } elseif (str_starts_with($extraValue, '!')) {
-            $query->where($key, '!=', mb_substr($extraValue, 1));
-        } else {
-            $query->where($key, $extraValue);
-        }
-    }
-
-    /**
-     * Get a query builder for the given table.
-     *
-     * @param  string  $table
-     * @return \Illuminate\Database\Query\Builder
-     */
-    protected function table($table)
-    {
-        return $this->db->connection($this->connection)->table($table)->useWritePdo();
-    }
-
-    /**
-     * Set the connection to be used.
-     *
-     * @param  string  $connection
-     * @return void
-     */
-    public function setConnection($connection)
-    {
-        $this->connection = $connection;
+        return $this->addConditions($query, $extra)->distinct()->cache(ttl: 300, wait: 5)->count($column);
     }
 }

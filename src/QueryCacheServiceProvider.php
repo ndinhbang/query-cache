@@ -61,13 +61,12 @@ class QueryCacheServiceProvider extends ServiceProvider
     {
         return function (
             DateTimeInterface|DateInterval|int|bool|null $ttl = 60,
-            string|array $key = [],
+            string|array $tagName = [],
             string $store = null,
             int $wait = 0,
             Relation $relation = null,
         ): Builder {
             /** @var \Illuminate\Database\Query\Builder $this */
-
             // Avoid re-wrapping the connection into another proxy.
             if ($this->connection instanceof CacheAwareConnectionProxy) {
                 $this->connection = $this->connection->connection;
@@ -76,7 +75,7 @@ class QueryCacheServiceProvider extends ServiceProvider
             $this->connection = CacheAwareConnectionProxy::createNewInstance(
                 $this->connection,
                 $ttl === false ? -1 : $ttl,
-                $key,
+                (array) ($tagName ?: $this->from),
                 $wait,
                 $store,
                 relation: $relation,
@@ -95,20 +94,22 @@ class QueryCacheServiceProvider extends ServiceProvider
     {
         return function (
             DateTimeInterface|DateInterval|int|bool|null $ttl = 60,
-            string|array $key = [],
+            string|array $tagName = [],
             string $store = null,
             int $wait = 0,
             Relation $relation = null,
         ): EloquentBuilder {
-            /** @var \Illuminate\Database\Eloquent\Builder $this */
-            $this->getQuery()->cache($ttl, $key ?? $this->getModel()->getTable(), $store, $wait, $relation);
+            /**@var \Illuminate\Database\Eloquent\Builder $this*/
+            $tagName = $tagName ?: $this->getModel()->getTable();
+
+            $this->getQuery()->cache($ttl, $tagName, $store, $wait, $relation);
 
             // This global scope is responsible for caching eager loaded relations.
             $this->withGlobalScope(
                 Scopes\CacheRelations::class,
                 new Scopes\CacheRelations(
                     $ttl === false ? -1 : $ttl,
-                    $key,
+                    $tagName,
                     $store,
                     $wait,
                 )

@@ -3,95 +3,75 @@
 namespace Ndinhbang\QueryCache;
 
 use BadMethodCallException;
-use Illuminate\Cache\RedisTagSet;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use function array_shift;
-use function base64_encode;
-use function cache;
-use function config;
 use DateInterval;
 use DateTimeInterface;
 use Illuminate\Cache\NoLock;
+use Illuminate\Cache\RedisTagSet;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Database\ConnectionInterface;
-use function implode;
-use function is_int;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use LogicException;
-use function max;
-use function md5;
-use function rtrim;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class CacheAwareConnectionProxy
 {
-    public ConnectionInterface $connection;
-    protected Repository $repository;
-    protected DateTimeInterface|DateInterval|int|null $ttl;
-    protected int $lockWait;
-    protected string $cachePrefix;
-    protected array $tagNames;
-    protected string $computedKey = '';
-    protected ?Relation $relation = null;
-
     /**
      * Create a new Cache Aware Connection Proxy instance.
      *
-     * @param \Illuminate\Database\ConnectionInterface $connection
-     * @param \Illuminate\Contracts\Cache\Repository $repository
-     * @param \DateTimeInterface|\DateInterval|int|null $ttl
+     * @param ConnectionInterface $connection
+     * @param Repository $repository
+     * @param DateTimeInterface|\DateInterval|int|null $ttl
      * @param int $lockWait
      * @param string $cachePrefix
      * @param array $tagNames
-     * @param \Illuminate\Database\Eloquent\Relations\Relation|null $relation
+     * @param Relation|null $relation
      */
     public function __construct(
-        ConnectionInterface $connection,
-        Repository $repository,
-        DateTimeInterface|DateInterval|int|null $ttl,
-        int $lockWait,
-        string $cachePrefix,
-        array $tagNames = [],
-        ?Relation $relation = null,
+        public ConnectionInterface $connection,
+        protected Repository $repository,
+        protected array $tagNames,
+        protected DateTimeInterface|DateInterval|int|null $ttl,
+        protected int $lockWait,
+        protected string $cachePrefix,
+        protected ?Relation $relation = null,
     ) {
-        $this->connection = $connection;
-        $this->repository = $repository;
-        $this->ttl = $ttl;
-        $this->lockWait = $lockWait;
-        $this->cachePrefix = $cachePrefix;
-        $this->tagNames = $tagNames;
-        $this->relation = $relation;
+        if (empty($tagNames)) {
+            throw new \InvalidArgumentException('Query cache tag name must be provided.');
+        }
     }
 
     /**
      * Create a new CacheAwareProxy instance.
      *
-     * @param \Illuminate\Database\ConnectionInterface $connection
-     * @param \DateTimeInterface|\DateInterval|int|null $ttl
-     * @param string|array $key
+     * @param ConnectionInterface $connection
+     * @param DateTimeInterface|\DateInterval|int|null $ttl
+     * @param array $tagNames
      * @param int $wait
      * @param string|null $store
-     * @param \Illuminate\Database\Eloquent\Relations\Relation|null $relation
+     * @param Relation|null $relation
+     * @param string|null $cachePrefix
      * @return static
      */
     public static function createNewInstance(
         ConnectionInterface $connection,
         DateTimeInterface|DateInterval|int|null $ttl,
-        string|array $key,
+        array $tagNames,
         int $wait,
         ?string $store,
         ?Relation $relation = null,
+        ?string $cachePrefix = null
     ): static {
-
         return new static(
-            connection: $connection,
-            repository: static::store($store, (bool) $wait),
-            ttl: $ttl,
-            lockWait: $wait,
-            cachePrefix: config('query-cache.prefix'),
-            tagNames: is_array($key) ? $key : [$key],
-            relation: $relation,
+           $connection,
+            static::store($store, (bool) $wait),
+            $tagNames,
+            $ttl,
+            $wait,
+            $cachePrefix ?: config('query-cache.prefix'),
+            $relation,
         );
     }
 
@@ -102,15 +82,15 @@ class CacheAwareConnectionProxy
      * @param array $bindings
      * @param bool $useReadPdo
      * @return array
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function select(string $query, array $bindings = [], bool $useReadPdo = true): array
     {
         // Create the unique hash for the query to avoid any duplicate query.
-        $this->computedKey = $this->getQueryHash($query, $bindings);
+        $computedKey = $this->getQueryHash($query, $bindings);
 
         // We will use the prefix to operate on the cache directly.
-        $key = $this->cachePrefix.':'.$this->computedKey;
+        $key = $this->cachePrefix.':'.$computedKey;
 
         if (!is_null($results = $this->retrieveResultsFromCache($key))) {
             return $results;
@@ -138,6 +118,9 @@ class CacheAwareConnectionProxy
             });
     }
 
+    /**
+     * @return array
+     */
     protected function getAllTagNames(): array
     {
         $names = $this->tagNames;
@@ -168,7 +151,7 @@ class CacheAwareConnectionProxy
      * @param array $bindings
      * @param bool $useReadPdo
      * @return mixed
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function selectOne(string $query, array $bindings = [], bool $useReadPdo = true)
     {
@@ -210,7 +193,7 @@ class CacheAwareConnectionProxy
      * @param string $key
      * @return array|null
      *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     protected function retrieveResultsFromCache(string $key): ?array
     {
@@ -225,7 +208,7 @@ class CacheAwareConnectionProxy
     /**
      * Gets the timestamp for the expiration time.
      *
-     * @param  \DateInterval|\DateTimeInterface|int  $expiration
+     * @param  \DateInterval|DateTimeInterface|int  $expiration
      * @return int
      */
     protected function getTimestamp(DateInterval|DateTimeInterface|int $expiration): int
@@ -282,7 +265,7 @@ class CacheAwareConnectionProxy
      *
      * @param  string|null  $store
      * @param  bool  $lockable
-     * @return \Illuminate\Contracts\Cache\Repository
+     * @return Repository
      */
     protected static function store(?string $store, bool $lockable): Repository
     {

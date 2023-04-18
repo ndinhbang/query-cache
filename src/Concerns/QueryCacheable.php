@@ -1,6 +1,6 @@
 <?php
 
-namespace Ndinhbang\QueryCache\Traits;
+namespace Ndinhbang\QueryCache\Concerns;
 
 use Ndinhbang\QueryCache\Observers\FlushQueryCacheObserver;
 

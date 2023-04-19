@@ -30,14 +30,15 @@ class CacheAwareConnectionProxy
      * @param Relation|null $relation
      */
     public function __construct(
-        public ConnectionInterface $connection,
-        protected Repository $repository,
-        protected array $tagNames,
+        public ConnectionInterface                        $connection,
+        protected Repository                              $repository,
+        protected array                                   $tagNames,
         protected DateTimeInterface|DateInterval|int|null $ttl,
-        protected int $lockWait,
-        protected string $cachePrefix,
-        protected ?Relation $relation = null,
-    ) {
+        protected int                                     $lockWait,
+        protected string                                  $cachePrefix,
+        protected ?Relation                               $relation = null,
+    )
+    {
         if (empty($tagNames)) {
             throw new \InvalidArgumentException('Query cache tag name must be provided.');
         }
@@ -56,17 +57,18 @@ class CacheAwareConnectionProxy
      * @return static
      */
     public static function createNewInstance(
-        ConnectionInterface $connection,
+        ConnectionInterface                     $connection,
         DateTimeInterface|DateInterval|int|null $ttl,
-        array $tagNames,
-        int $wait,
-        ?string $store,
-        ?Relation $relation = null,
-        ?string $cachePrefix = null
-    ): static {
+        array                                   $tagNames,
+        int                                     $wait,
+        ?string                                 $store,
+        ?Relation                               $relation = null,
+        ?string                                 $cachePrefix = null
+    ): static
+    {
         return new static(
-           $connection,
-            static::store($store, (bool) $wait),
+            $connection,
+            static::store($store, (bool)$wait),
             $tagNames,
             $ttl,
             $wait,
@@ -90,7 +92,7 @@ class CacheAwareConnectionProxy
         $computedKey = $this->getQueryHash($query, $bindings);
 
         // We will use the prefix to operate on the cache directly.
-        $key = $this->cachePrefix.':'.$computedKey;
+        $key = $this->cachePrefix . ':' . $computedKey;
 
         if (!is_null($results = $this->retrieveResultsFromCache($key))) {
             return $results;
@@ -106,13 +108,13 @@ class CacheAwareConnectionProxy
 
                 $results = $this->connection->select($query, $bindings, $useReadPdo);
 
-                if ($this->ttl === null) {
+                if ($this->ttl) {
                     $this->repository->getStore()->forever($key, $results);
                 } else {
                     $this->repository->getStore()->put($key, $results, $this->ttl);
                 }
                 // We will tag the key, use the tags for removing key later
-                $this->tags($this->getAllTagNames())->addEntry($key, ! is_null($this->ttl) ? $this->ttl : 0);
+                $this->tags($this->getAllTagNames())->addEntry($key, $this->ttl ?: -1);
 
                 return $results;
             });
@@ -163,24 +165,24 @@ class CacheAwareConnectionProxy
     /**
      * Hashes the incoming query for using as cache key.
      *
-     * @param  string  $query
-     * @param  array  $bindings
+     * @param string $query
+     * @param array $bindings
      * @return string
      */
     protected function getQueryHash(string $query, array $bindings): string
     {
-        return rtrim(base64_encode(md5($this->connection->getDatabaseName().$query.implode('', $bindings), true)), '=');
+        return rtrim(base64_encode(md5($this->connection->getDatabaseName() . $query . implode('', $bindings), true)), '=');
     }
 
     /**
      * Retrieves the lock to use before getting the results.
      *
-     * @param  string  $key
+     * @param string $key
      * @return \Illuminate\Contracts\Cache\Lock
      */
     protected function retrieveLock(string $key): Lock
     {
-        if (! $this->lockWait) {
+        if (!$this->lockWait) {
             return new NoLock($key, $this->lockWait);
         }
 
@@ -208,7 +210,7 @@ class CacheAwareConnectionProxy
     /**
      * Gets the timestamp for the expiration time.
      *
-     * @param  \DateInterval|DateTimeInterface|int  $expiration
+     * @param \DateInterval|DateTimeInterface|int $expiration
      * @return int
      */
     protected function getTimestamp(DateInterval|DateTimeInterface|int $expiration): int
@@ -227,7 +229,7 @@ class CacheAwareConnectionProxy
     /**
      * Pass-through all properties to the underlying connection.
      *
-     * @param  string  $name
+     * @param string $name
      * @return mixed
      */
     public function __get(string $name): mixed
@@ -238,8 +240,8 @@ class CacheAwareConnectionProxy
     /**
      * Pass-through all properties to the underlying connection.
      *
-     * @param  string  $name
-     * @param  mixed  $value
+     * @param string $name
+     * @param mixed $value
      * @return void
      * @noinspection MagicMethodsValidityInspection
      */
@@ -251,8 +253,8 @@ class CacheAwareConnectionProxy
     /**
      * Pass-through all method calls to the underlying connection.
      *
-     * @param  string  $name
-     * @param  array  $arguments
+     * @param string $name
+     * @param array $arguments
      * @return mixed
      */
     public function __call(string $name, array $arguments)
@@ -263,20 +265,20 @@ class CacheAwareConnectionProxy
     /**
      * Returns the store to se for caching.
      *
-     * @param  string|null  $store
-     * @param  bool  $lockable
+     * @param string|null $store
+     * @param bool $lockable
      * @return Repository
      */
     protected static function store(?string $store, bool $lockable): Repository
     {
-        $repository = cache()->store($store ?? config('query-cache.store'));
+        $repository = cache()->store($store ?: config('query-cache.store'));
 
-        if (! $repository->supportsTags()) {
+        if (!$repository->supportsTags()) {
             throw new BadMethodCallException('This cache store does not support tagging.');
         }
 
-        if ($lockable && ! $repository->getStore() instanceof LockProvider) {
-            $store ??= cache()->getDefaultDriver();
+        if ($lockable && !$repository->getStore() instanceof LockProvider) {
+            $store = $store ?: cache()->getDefaultDriver();
 
             throw new LogicException("The [$store] cache does not support atomic locks.");
         }

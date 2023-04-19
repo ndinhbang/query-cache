@@ -74,11 +74,11 @@ class QueryCacheServiceProvider extends ServiceProvider
 
             $this->connection = CacheAwareConnectionProxy::createNewInstance(
                 $this->connection,
-                $ttl === false ? -1 : $ttl,
+                $ttl ?: -1,
                 (array) ($tagName ?: $this->from),
                 $wait,
                 $store,
-                relation: $relation,
+                $relation,
             );
 
             return $this;
@@ -102,13 +102,13 @@ class QueryCacheServiceProvider extends ServiceProvider
             /**@var \Illuminate\Database\Eloquent\Builder $this*/
             $tagName = $tagName ?: $this->getModel()->getTable();
 
-            $this->getQuery()->cache($ttl, $tagName, $store, $wait, $relation);
+            $this->getQuery()->cache($ttl ?: -1, $tagName, $store, $wait, $relation);
 
             // This global scope is responsible for caching eager loaded relations.
             $this->withGlobalScope(
                 Scopes\CacheRelations::class,
                 new Scopes\CacheRelations(
-                    $ttl === false ? -1 : $ttl,
+                    $ttl ?: -1,
                     $tagName,
                     $store,
                     $wait,

@@ -10,13 +10,14 @@ use Illuminate\Cache\RedisTagSet;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use LogicException;
 use Psr\SimpleCache\InvalidArgumentException;
 
-class CacheAwareConnectionProxy
+class CacheAwareConnectionProxy extends Connection
 {
     /**
      * Create a new Cache Aware Connection Proxy instance.
@@ -86,7 +87,7 @@ class CacheAwareConnectionProxy
      * @return array
      * @throws InvalidArgumentException
      */
-    public function select(string $query, array $bindings = [], bool $useReadPdo = true): array
+    public function select($query, $bindings = [], $useReadPdo = true): array
     {
         // Create the unique hash for the query to avoid any duplicate query.
         $computedKey = $this->getQueryHash($query, $bindings);
@@ -155,7 +156,7 @@ class CacheAwareConnectionProxy
      * @return mixed
      * @throws InvalidArgumentException
      */
-    public function selectOne(string $query, array $bindings = [], bool $useReadPdo = true)
+    public function selectOne($query, $bindings = [], $useReadPdo = true)
     {
         $records = $this->select($query, $bindings, $useReadPdo);
 
@@ -253,13 +254,13 @@ class CacheAwareConnectionProxy
     /**
      * Pass-through all method calls to the underlying connection.
      *
-     * @param string $name
-     * @param array $arguments
+     * @param string $method
+     * @param array $parameters
      * @return mixed
      */
-    public function __call(string $name, array $arguments)
+    public function __call($method, $parameters)
     {
-        return $this->connection->{$name}(...$arguments);
+        return $this->connection->{$method}(...$parameters);
     }
 
     /**

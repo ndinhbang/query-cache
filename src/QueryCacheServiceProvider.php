@@ -71,7 +71,7 @@ class QueryCacheServiceProvider extends ServiceProvider
             if ($this->connection instanceof CacheAwareConnectionProxy) {
                 $this->connection = $this->connection->connection;
             }
-
+            // @phpstan-ignore-next-line
             $this->connection = CacheAwareConnectionProxy::createNewInstance(
                 $this->connection,
                 $ttl ?: -1,

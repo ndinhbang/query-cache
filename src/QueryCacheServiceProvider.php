@@ -60,10 +60,10 @@ class QueryCacheServiceProvider extends ServiceProvider
     protected function macro(): Closure
     {
         return function (
-            DateTimeInterface|DateInterval|int|bool|null $ttl = 60,
+            DateTimeInterface|DateInterval|int|bool|null $ttl = 300,
             string|array $tagName = [],
             string $store = null,
-            int $wait = 0,
+            int $wait = 5,
             Relation $relation = null,
         ): Builder {
             /** @var \Illuminate\Database\Query\Builder $this */
@@ -93,10 +93,10 @@ class QueryCacheServiceProvider extends ServiceProvider
     protected function eloquentMacro(): Closure
     {
         return function (
-            DateTimeInterface|DateInterval|int|bool|null $ttl = 60,
+            DateTimeInterface|DateInterval|int|bool|null $ttl = 300,
             string|array $tagName = [],
             string $store = null,
-            int $wait = 0,
+            int $wait = 5,
             Relation $relation = null,
         ): EloquentBuilder {
             /**@var \Illuminate\Database\Eloquent\Builder $this*/

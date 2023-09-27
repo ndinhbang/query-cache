@@ -33,7 +33,7 @@ trait QueryCacheable
     /**
      * @return array
      */
-    protected function getCacheTagsToInvalidateOnUpdate(): array
+    public function getCacheTagsToInvalidateOnUpdate(): array
     {
         return [
             $this->getTable(),
